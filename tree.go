@@ -42,6 +42,7 @@ const (
 
 type node struct {
 	path      string
+	alias     string
 	wildChild bool
 	nType     nodeType
 	maxParams uint8
@@ -77,7 +78,7 @@ func (n *node) incrementChildPrio(pos int) int {
 
 // addRoute adds a node with the given handle to the path.
 // Not concurrency-safe!
-func (n *node) addRoute(path string, handle Handle) {
+func (n *node) addRoute(path string, handle Handle, alias string) {
 	fullPath := path
 	n.priority++
 	numParams := countParams(path)
@@ -109,6 +110,7 @@ func (n *node) addRoute(path string, handle Handle) {
 					indices:   n.indices,
 					children:  n.children,
 					handle:    n.handle,
+					alias:     n.alias,
 					priority:  n.priority - 1,
 				}
 
@@ -192,7 +194,7 @@ func (n *node) addRoute(path string, handle Handle) {
 					n.incrementChildPrio(len(n.indices) - 1)
 					n = child
 				}
-				n.insertChild(numParams, path, fullPath, handle)
+				n.insertChild(numParams, path, fullPath, handle, alias)
 				return
 
 			} else if i == len(path) { // Make node a (in-path) leaf
@@ -204,12 +206,12 @@ func (n *node) addRoute(path string, handle Handle) {
 			return
 		}
 	} else { // Empty tree
-		n.insertChild(numParams, path, fullPath, handle)
+		n.insertChild(numParams, path, fullPath, handle, alias)
 		n.nType = root
 	}
 }
 
-func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle) {
+func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle, alias string) {
 	var offset int // already handled bytes of the path
 
 	// find prefix until first wildcard (beginning with ':'' or '*'')
@@ -309,6 +311,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 				nType:     catchAll,
 				maxParams: 1,
 				handle:    handle,
+				alias:     alias,
 				priority:  1,
 			}
 			n.children = []*node{child}
@@ -320,6 +323,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 	// insert remaining path part and handle to the leaf
 	n.path = path[offset:]
 	n.handle = handle
+	n.alias = alias
 }
 
 // Returns the handle registered with the given path (key). The values of
@@ -338,6 +342,8 @@ walk: // outer loop for walking the tree
 				// to walk down the tree
 				if !n.wildChild {
 					c := path[0]
+					p = append(p, Param{Key: "route_alias", Value: n.alias})
+
 					for i := 0; i < len(n.indices); i++ {
 						if c == n.indices[i] {
 							n = n.children[i]
@@ -355,6 +361,7 @@ walk: // outer loop for walking the tree
 
 				// handle wildcard child
 				n = n.children[0]
+
 				switch n.nType {
 				case param:
 					// find param end (either '/' or path end)

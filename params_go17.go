@@ -17,15 +17,14 @@ var ParamsKey = paramsKey{}
 // Handler is an adapter which allows the usage of an http.Handler as a
 // request handle. With go 1.7+, the Params will be available in the
 // request context under ParamsKey.
-func (r *Router) Handler(method, path string, handler http.Handler) {
+func (r *Router) Handler(method, path string, handler http.Handler, alias string) {
 	r.Handle(method, path,
 		func(w http.ResponseWriter, req *http.Request, p Params) {
 			ctx := req.Context()
 			ctx = context.WithValue(ctx, ParamsKey, p)
 			req = req.WithContext(ctx)
 			handler.ServeHTTP(w, req)
-		},
-	)
+		}, alias)
 }
 
 // ParamsFromContext pulls the URL parameters from a request context,

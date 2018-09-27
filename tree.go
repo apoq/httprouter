@@ -332,6 +332,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
 func (n *node) getValue(path string) (handle Handle, p Params, tsr bool) {
+	p = append(p, Param{Key: "route_alias", Value: n.alias})
 walk: // outer loop for walking the tree
 	for {
 		if len(path) > len(n.path) {

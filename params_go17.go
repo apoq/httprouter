@@ -22,6 +22,7 @@ func (r *Router) Handler(method, path string, handler http.Handler, alias string
 		func(w http.ResponseWriter, req *http.Request, p Params) {
 			ctx := req.Context()
 			ctx = context.WithValue(ctx, ParamsKey, p)
+			ctx = context.WithValue(ctx, "route_alias", alias)
 			req = req.WithContext(ctx)
 			handler.ServeHTTP(w, req)
 		}, alias)

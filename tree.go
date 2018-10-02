@@ -332,7 +332,6 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
 func (n *node) getValue(path string) (handle Handle, p Params, tsr bool) {
-	p = append(p, Param{Key: "route_alias", Value: n.alias})
 walk: // outer loop for walking the tree
 	for {
 		if len(path) > len(n.path) {
@@ -343,8 +342,6 @@ walk: // outer loop for walking the tree
 				// to walk down the tree
 				if !n.wildChild {
 					c := path[0]
-					p = append(p, Param{Key: "route_alias", Value: n.alias})
-
 					for i := 0; i < len(n.indices); i++ {
 						if c == n.indices[i] {
 							n = n.children[i]
@@ -374,7 +371,8 @@ walk: // outer loop for walking the tree
 					// save param value
 					if p == nil {
 						// lazy allocation
-						p = make(Params, 0, n.maxParams)
+						p = make(Params, 0, n.maxParams+1)
+						p = append(p, Param{Key: "route_alias", Value: n.alias})
 					}
 					i := len(p)
 					p = p[:i+1] // expand slice within preallocated capacity

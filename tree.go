@@ -341,7 +341,6 @@ walk: // outer loop for walking the tree
 				// child,  we can just look up the next child node and continue
 				// to walk down the tree
 				if !n.wildChild {
-					p = append(p, Param{Key: "route_alias", Value: n.alias})
 					c := path[0]
 					for i := 0; i < len(n.indices); i++ {
 						if c == n.indices[i] {
@@ -408,7 +407,7 @@ walk: // outer loop for walking the tree
 					// save param value
 					if p == nil {
 						// lazy allocation
-						p = make(Params, 0, n.maxParams+1)
+						p = make(Params, 0, n.maxParams+2)
 						p = append(p, Param{Key: "route_alias", Value: n.alias})
 					}
 					i := len(p)
@@ -424,7 +423,9 @@ walk: // outer loop for walking the tree
 				}
 			}
 		} else if path == n.path {
-			p = append(p, Param{Key: "route_alias", Value: n.alias})
+			if p.ByName("route_alias") == "" {
+				p = append(p, Param{Key: "route_alias", Value: n.alias})
+			}
 			// We should have reached the node containing the handle.
 			// Check if this node has a handle registered.
 			if handle = n.handle; handle != nil {
@@ -450,6 +451,9 @@ walk: // outer loop for walking the tree
 			return
 		}
 
+		if p.ByName("route_alias") == "" {
+			p = append(p, Param{Key: "route_alias", Value: n.alias})
+		}
 		// Nothing found. We can recommend to redirect to the same URL with an
 		// extra trailing slash if a leaf exists for that path
 		tsr = (path == "/") ||

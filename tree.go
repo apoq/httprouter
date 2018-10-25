@@ -81,6 +81,7 @@ func (n *node) incrementChildPrio(pos int) int {
 func (n *node) addRoute(path string, handle Handle, alias string) {
 	fullPath := path
 	n.priority++
+	n.alias = alias
 	numParams := countParams(path)
 
 	// non-empty tree
@@ -210,6 +211,7 @@ func (n *node) addRoute(path string, handle Handle, alias string) {
 		n.nType = root
 	}
 }
+	"fmt"
 
 func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle, alias string) {
 	var offset int // already handled bytes of the path
@@ -260,6 +262,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 			n.children = []*node{child}
 			n.wildChild = true
 			n = child
+			n.alias = alias
 			n.priority++
 			numParams--
 
@@ -299,6 +302,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 				wildChild: true,
 				nType:     catchAll,
 				maxParams: 1,
+				alias:     alias,
 			}
 			n.children = []*node{child}
 			n.indices = string(path[i])
@@ -361,6 +365,7 @@ walk: // outer loop for walking the tree
 				n = n.children[0]
 
 				switch n.nType {
+
 				case param:
 					// find param end (either '/' or path end)
 					end := 0
@@ -378,6 +383,9 @@ walk: // outer loop for walking the tree
 					p = p[:i+1] // expand slice within preallocated capacity
 					p[i].Key = n.path[1:]
 					p[i].Value = path[:end]
+					if p.ByName("route_alias") == "" {
+						p = append(p, Param{Key: "route_alias", Value: n.alias})
+					}
 
 					// we need to go deeper!
 					if end < len(path) {

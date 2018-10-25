@@ -211,7 +211,6 @@ func (n *node) addRoute(path string, handle Handle, alias string) {
 		n.nType = root
 	}
 }
-	"fmt"
 
 func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle, alias string) {
 	var offset int // already handled bytes of the path
